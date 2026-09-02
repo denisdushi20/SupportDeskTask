@@ -1,54 +1,76 @@
 @if (loading()) {
-  <div class="loading" aria-live="polite">Loading ticket…</div>
+  <div class="detail-skeleton" aria-live="polite" aria-busy="true">
+    <div class="skeleton skeleton--text" style="width: 8rem; margin-bottom: 0.75rem"></div>
+    <div class="skeleton skeleton--title"></div>
+    <div class="skeleton skeleton--text" style="width: 60%; margin-bottom: 1.5rem"></div>
+    <div class="detail-grid">
+      <div class="panel">
+        <div class="skeleton skeleton--text" style="width: 30%"></div>
+        <div class="skeleton skeleton--text" style="width: 90%"></div>
+        <div class="skeleton skeleton--text" style="width: 80%"></div>
+        <div class="skeleton skeleton--text" style="width: 85%"></div>
+      </div>
+      <div class="panel panel--meta">
+        <div class="skeleton skeleton--text" style="width: 40%"></div>
+        <div class="skeleton skeleton--text" style="width: 70%"></div>
+        <div class="skeleton skeleton--text" style="width: 65%"></div>
+      </div>
+    </div>
+  </div>
 } @else if (error()) {
-  <div class="panel">
-    <h1>Ticket unavailable</h1>
-    <div class="banner banner--error" role="alert">{{ errorMessage() }}</div>
+  <div class="panel error-state">
+    <h1 class="error-state__title">Ticket unavailable</h1>
+    <p class="error-state__desc">{{ errorMessage() }}</p>
     <a routerLink="/tickets" class="btn secondary">Back to tickets</a>
   </div>
 } @else if (ticket(); as t) {
-  <div class="page-header">
+  <a routerLink="/tickets" class="back-link">← Tickets</a>
+
+  <div class="page-header detail-header">
     <div>
       <p class="ref">{{ t.reference }}</p>
-      <h1>{{ t.title }}</h1>
+      <h1 class="page-header__title">{{ t.title }}</h1>
       <div class="meta-row">
         <span class="badge" [class]="'badge badge--' + t.status">{{ statusLabel(t.status) }}</span>
         <span class="badge" [class]="'badge badge--' + t.priority">{{
           priorityLabel(t.priority)
         }}</span>
         @if (t.isOverdue) {
-          <span class="overdue-flag">Overdue</span>
+          <span class="overdue-flag">
+            Overdue
+            @if (formatOverdueRelative(t.dueDate); as rel) {
+              <span class="overdue-flag__detail">{{ rel }}</span>
+            }
+          </span>
         }
       </div>
     </div>
     <div class="header-actions">
-      <a routerLink="/tickets" class="btn secondary">Back</a>
-      <a
-        [routerLink]="['/tickets', t.id, 'edit']"
-        class="btn secondary"
-        [attr.aria-disabled]="!t.canEditFields"
-        [class.is-disabled]="!t.canEditFields"
-        (click)="!t.canEditFields && $event.preventDefault()"
-        >Edit</a
-      >
-      <button
-        type="button"
-        class="danger"
-        [disabled]="!t.canDelete || actionBusy()"
-        (click)="confirmDelete()"
-      >
-        Delete
-      </button>
+      @if (t.canEditFields) {
+        <a [routerLink]="['/tickets', t.id, 'edit']" class="btn secondary">Edit</a>
+      }
+      @if (t.canDelete) {
+        <button
+          type="button"
+          class="danger"
+          [disabled]="actionBusy()"
+          (click)="confirmDelete()"
+        >
+          Delete
+        </button>
+      }
     </div>
   </div>
 
   @if (t.status === 'Closed') {
     <div class="banner banner--closed" role="status">
-      This ticket is closed and immutable.
+      <span class="banner__title">Closed</span>
+      This ticket is read-only. No further changes can be made.
     </div>
   } @else if (t.status === 'Resolved') {
     <div class="banner banner--info" role="status">
-      Resolved — fields are locked, but workflow actions remain available.
+      <span class="banner__title">Resolved</span>
+      Fields are locked. You can reopen or close this ticket.
     </div>
   }
 
@@ -62,95 +84,127 @@
   }
 
   <div class="detail-grid">
-    <section class="panel">
-      <h2>Details</h2>
-      <dl class="detail-dl">
-        <div>
-          <dt>Description</dt>
-          <dd class="pre-wrap">{{ t.description }}</dd>
-        </div>
-        <div>
-          <dt>Customer</dt>
-          <dd>{{ t.customerName }} &lt;{{ t.customerEmail }}&gt;</dd>
-        </div>
-        <div>
-          <dt>Assigned agent</dt>
-          <dd>
-            @if (t.assignedAgent) {
-              {{ t.assignedAgent.fullName }}
-              @if (!t.assignedAgent.active) {
-                <span class="muted">(inactive)</span>
-              }
-            } @else {
-              —
-            }
-          </dd>
-        </div>
-        <div>
-          <dt>Created</dt>
-          <dd>{{ t.createdDate | date: 'medium' }}</dd>
-        </div>
-        <div>
-          <dt>Last modified</dt>
-          <dd>{{ t.lastModifiedDate | date: 'medium' }}</dd>
-        </div>
-        <div>
-          <dt>Due date</dt>
-          <dd [class.overdue-text]="t.isOverdue">
-            {{ t.dueDate | date: 'medium' }}
-            @if (t.isOverdue) {
-              <span class="overdue-flag">Overdue</span>
-            }
-          </dd>
-        </div>
-        <div>
-          <dt>Resolved</dt>
-          <dd>{{ t.resolvedDate ? (t.resolvedDate | date: 'medium') : '—' }}</dd>
-        </div>
-        <div>
-          <dt>Closed</dt>
-          <dd>{{ t.closedDate ? (t.closedDate | date: 'medium') : '—' }}</dd>
-        </div>
-      </dl>
-    </section>
-
-    <div class="side-stack">
+    <div class="main-stack">
       <section class="panel">
-        <h2>Status</h2>
+        <h2 class="section-title">Description</h2>
+        <p class="pre-wrap description-body">{{ t.description }}</p>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Customer</h2>
+        <dl class="meta-dl">
+          <div>
+            <dt>Name</dt>
+            <dd>{{ t.customerName }}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>
+              <a [href]="'mailto:' + t.customerEmail">{{ t.customerEmail }}</a>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="panel comments">
+        <h2 class="section-title">Comments</h2>
+
+        @if (t.comments.length === 0) {
+          <p class="muted comments-empty">No comments yet.</p>
+        } @else {
+          <ol class="comment-list">
+            @for (c of t.comments; track c.id) {
+              <li class="comment">
+                <div class="comment__meta">
+                  <strong>{{ c.authorName }}</strong>
+                  <time [attr.datetime]="c.createdDate">{{ c.createdDate | date: 'medium' }}</time>
+                </div>
+                <p class="pre-wrap comment__body">{{ c.body }}</p>
+              </li>
+            }
+          </ol>
+        }
+
+        @if (t.status === 'Closed' || !t.canAddComment) {
+          @if (t.status === 'Closed') {
+            <p class="muted">Comments cannot be added while this ticket is closed.</p>
+          }
+        } @else {
+          <form class="comment-form" [formGroup]="commentForm" (ngSubmit)="addComment()">
+            <div class="form-row">
+              <div class="field">
+                <label for="authorName">Author name</label>
+                <input id="authorName" type="text" formControlName="authorName" maxlength="200" />
+                @if (
+                  commentForm.controls.authorName.touched && commentForm.controls.authorName.invalid
+                ) {
+                  <div class="field-error">Author name is required.</div>
+                }
+              </div>
+            </div>
+            <div class="field">
+              <label for="body">Comment</label>
+              <textarea id="body" formControlName="body" maxlength="4000" rows="3"></textarea>
+              @if (commentForm.controls.body.touched && commentForm.controls.body.invalid) {
+                <div class="field-error">Comment body is required.</div>
+              }
+            </div>
+            <button type="submit" [disabled]="actionBusy() || commentForm.invalid">
+              Add comment
+            </button>
+          </form>
+        }
+      </section>
+    </div>
+
+    <aside class="side-stack">
+      <section class="panel panel--meta">
+        <h2 class="section-title">Workflow</h2>
         @if (t.status === 'Closed') {
-          <p class="muted">Status changes are disabled because this ticket is closed.</p>
+          <p class="muted side-note">This ticket is closed. Status changes are not available.</p>
         } @else if (t.allowedTransitions.length === 0) {
-          <p class="muted">No status transitions are currently available.</p>
+          <p class="muted side-note">No status transitions are currently available.</p>
         } @else {
           <div class="action-row">
             @for (next of t.allowedTransitions; track next) {
-              <button
-                type="button"
-                [disabled]="actionBusy()"
-                (click)="changeStatus(next)"
-              >
-                Move to {{ statusLabel(next) }}
+              <button type="button" [disabled]="actionBusy()" (click)="changeStatus(next)">
+                {{ transitionActionLabel(t.status, next) }}
               </button>
             }
           </div>
         }
       </section>
 
-      <section class="panel">
-        <h2>Assignment</h2>
-        @if (t.status === 'Closed') {
-          <p class="muted">Assignment is disabled because this ticket is closed.</p>
+      <section class="panel panel--meta">
+        <h2 class="section-title">Assignment</h2>
+        @if (t.assignedAgent) {
+          <div class="assignee-card">
+            <div class="assignee-card__name">{{ t.assignedAgent.fullName }}</div>
+            <div class="assignee-card__meta muted">
+              {{ departmentLabel(t.assignedAgent.department) }}
+              ·
+              {{ t.assignedAgent.active ? 'Active' : 'Inactive' }}
+            </div>
+          </div>
         } @else {
-          <form [formGroup]="assignForm" (ngSubmit)="assign()">
+          <div class="assignee-card assignee-card--empty">
+            <div class="assignee-card__name">Unassigned</div>
+            <div class="assignee-card__meta muted">Assign an agent to progress this ticket</div>
+          </div>
+        }
+
+        @if (t.status === 'Closed') {
+          <p class="muted side-note">Assignment is disabled because this ticket is closed.</p>
+        } @else {
+          <form class="assign-form" [formGroup]="assignForm" (ngSubmit)="assign()">
             <div class="field">
-              <label for="agentId">Active agent</label>
-              <select
-                id="agentId"
-                formControlName="agentId"
-              >
+              <label for="agentId">Assign to</label>
+              <select id="agentId" formControlName="agentId">
                 <option value="">Select an agent</option>
                 @for (agent of activeAgents(); track agent.id) {
-                  <option [value]="agent.id">{{ agent.fullName }}</option>
+                  <option [value]="agent.id">
+                    {{ agent.fullName }} · {{ departmentLabel(agent.department) }}
+                  </option>
                 }
               </select>
             </div>
@@ -170,58 +224,54 @@
           </form>
         }
       </section>
-    </div>
+
+      <section class="panel panel--meta">
+        <h2 class="section-title">SLA</h2>
+        <dl class="meta-dl">
+          <div>
+            <dt>Due</dt>
+            <dd [class.overdue-text]="t.isOverdue">
+              {{ t.dueDate | date: 'medium' }}
+              @if (t.isOverdue) {
+                <div class="sla-overdue">
+                  @if (formatOverdueRelative(t.dueDate); as rel) {
+                    {{ rel }}
+                  } @else {
+                    Overdue
+                  }
+                </div>
+              }
+            </dd>
+          </div>
+          <div>
+            <dt>Created</dt>
+            <dd>{{ t.createdDate | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Last modified</dt>
+            <dd>{{ t.lastModifiedDate | date: 'medium' }}</dd>
+          </div>
+          <div>
+            <dt>Resolved</dt>
+            <dd>{{ t.resolvedDate ? (t.resolvedDate | date: 'medium') : '—' }}</dd>
+          </div>
+          <div>
+            <dt>Closed</dt>
+            <dd>{{ t.closedDate ? (t.closedDate | date: 'medium') : '—' }}</dd>
+          </div>
+        </dl>
+      </section>
+    </aside>
   </div>
 
-  <section class="panel comments">
-    <h2>Comments</h2>
-
-    @if (t.comments.length === 0) {
-      <p class="muted">No comments yet.</p>
-    } @else {
-      <ol class="comment-list">
-        @for (c of t.comments; track c.id) {
-          <li class="comment">
-            <div class="comment__meta">
-              <strong>{{ c.authorName }}</strong>
-              <time [attr.datetime]="c.createdDate">{{ c.createdDate | date: 'medium' }}</time>
-            </div>
-            <p class="pre-wrap">{{ c.body }}</p>
-          </li>
-        }
-      </ol>
-    }
-
-    @if (t.status === 'Closed' || !t.canAddComment) {
-      <p class="muted">Comments cannot be added while this ticket is closed.</p>
-    } @else {
-      <form class="comment-form" [formGroup]="commentForm" (ngSubmit)="addComment()">
-        <div class="field">
-          <label for="authorName">Author name</label>
-          <input id="authorName" type="text" formControlName="authorName" maxlength="200" />
-          @if (commentForm.controls.authorName.touched && commentForm.controls.authorName.invalid) {
-            <div class="field-error">Author name is required.</div>
-          }
-        </div>
-        <div class="field">
-          <label for="body">Comment</label>
-          <textarea id="body" formControlName="body" maxlength="4000"></textarea>
-          @if (commentForm.controls.body.touched && commentForm.controls.body.invalid) {
-            <div class="field-error">Comment body is required.</div>
-          }
-        </div>
-        <button type="submit" [disabled]="actionBusy() || commentForm.invalid">Add comment</button>
-      </form>
-    }
-  </section>
-
   @if (showDeleteConfirm()) {
-    <div class="dialog-backdrop" role="presentation">
+    <div class="dialog-backdrop" role="presentation" (click)="cancelDelete()">
       <div
         class="dialog panel"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="delete-title"
+        (click)="$event.stopPropagation()"
       >
         <h2 id="delete-title">Delete ticket?</h2>
         <p>
@@ -231,7 +281,12 @@
           <button type="button" class="danger" [disabled]="actionBusy()" (click)="deleteTicket()">
             Delete
           </button>
-          <button type="button" class="secondary" [disabled]="actionBusy()" (click)="cancelDelete()">
+          <button
+            type="button"
+            class="secondary"
+            [disabled]="actionBusy()"
+            (click)="cancelDelete()"
+          >
             Cancel
           </button>
         </div>

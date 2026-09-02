@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AgentListPage } from './agents/pages/agent-list.page';
 import { TicketListPage } from './tickets/pages/ticket-list.page';
 import { TicketCreatePage } from './tickets/pages/ticket-create.page';
 import { TicketDetailPage } from './tickets/pages/ticket-detail.page';
@@ -11,5 +12,6 @@ export const routes: Routes = [
   { path: 'tickets/new', component: TicketCreatePage },
   { path: 'tickets/:id', component: TicketDetailPage },
   { path: 'tickets/:id/edit', component: TicketEditPage },
+  { path: 'agents', component: AgentListPage },
   { path: '**', component: NotFoundPage },
 ];

@@ -1,0 +1,92 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-header__title">Agents</h1>
+    <p class="page-header__desc">Active and inactive support agents available for assignment.</p>
+  </div>
+</div>
+
+@if (loading()) {
+  <div class="panel panel--flush" aria-live="polite" aria-busy="true">
+    <div class="agent-table-wrap">
+      <table class="agent-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Department</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (_ of [1, 2, 3, 4]; track $index) {
+            <tr>
+              <td><div class="skeleton skeleton--text" style="width: 55%"></div></td>
+              <td><div class="skeleton skeleton--text" style="width: 70%"></div></td>
+              <td><div class="skeleton skeleton--text" style="width: 40%"></div></td>
+              <td><div class="skeleton skeleton--text" style="width: 30%"></div></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+} @else if (error()) {
+  <div class="panel error-state" role="alert">
+    <h2 class="error-state__title">Unable to load agents</h2>
+    <p class="error-state__desc">{{ errorMessage() }}</p>
+    <button type="button" (click)="load()">Retry</button>
+  </div>
+} @else if (agents().length === 0) {
+  <div class="panel empty-state">
+    <p class="empty-state__title">No agents found</p>
+    <p class="empty-state__desc">There are no agents in the system yet.</p>
+  </div>
+} @else {
+  <div class="panel panel--flush">
+    <div class="agent-table-wrap">
+      <table class="agent-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Department</th>
+            <th scope="col">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (agent of agents(); track agent.id) {
+            <tr>
+              <td class="agent-table__name">{{ agent.fullName }}</td>
+              <td class="muted">{{ agent.email }}</td>
+              <td>{{ departmentLabel(agent.department) }}</td>
+              <td>
+                @if (agent.active) {
+                  <span class="badge badge--active">Active</span>
+                } @else {
+                  <span class="badge badge--inactive">Inactive</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <ul class="agent-cards" aria-label="Agent list">
+      @for (agent of agents(); track agent.id) {
+        <li class="agent-card">
+          <div class="agent-card__top">
+            <strong>{{ agent.fullName }}</strong>
+            @if (agent.active) {
+              <span class="badge badge--active">Active</span>
+            } @else {
+              <span class="badge badge--inactive">Inactive</span>
+            }
+          </div>
+          <p class="muted agent-card__email">{{ agent.email }}</p>
+          <p class="agent-card__dept">{{ departmentLabel(agent.department) }}</p>
+        </li>
+      }
+    </ul>
+  </div>
+}

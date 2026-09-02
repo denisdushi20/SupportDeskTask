@@ -1,28 +1,43 @@
 @if (loading()) {
-  <div class="loading" aria-live="polite">Loading ticket…</div>
+  <div class="form-skeleton" aria-live="polite" aria-busy="true">
+    <div class="skeleton skeleton--title"></div>
+    <div class="skeleton skeleton--text" style="width: 55%; margin-bottom: 1.5rem"></div>
+    <div class="form-shell">
+      <div class="form-section">
+        <div class="skeleton skeleton--text" style="width: 25%"></div>
+        <div class="skeleton skeleton--text" style="width: 100%; height: 2.25rem"></div>
+        <div class="skeleton skeleton--text" style="width: 100%; height: 6rem; margin-top: 1rem"></div>
+      </div>
+    </div>
+  </div>
 } @else if (loadError()) {
-  <div class="panel">
-    <h1>Ticket unavailable</h1>
-    <div class="banner banner--error" role="alert">{{ errorMessage(loadError()) }}</div>
+  <div class="panel error-state">
+    <h1 class="error-state__title">Ticket unavailable</h1>
+    <p class="error-state__desc">{{ errorMessage(loadError()) }}</p>
     <a routerLink="/tickets" class="btn secondary">Back to tickets</a>
   </div>
 } @else if (ticket(); as t) {
+  <a [routerLink]="['/tickets', t.id]" class="back-link">← {{ t.reference }}</a>
+
   <div class="page-header">
     <div>
-      <h1>Edit {{ t.reference }}</h1>
-      <p class="muted">
-        Status: {{ statusLabel(t.status) }}. Due date is recalculated by the server if priority
-        changes.
+      <h1 class="page-header__title">Edit ticket</h1>
+      <p class="page-header__desc">
+        {{ t.reference }} · {{ statusLabel(t.status) }}. Due date is recalculated by the server if
+        priority changes.
       </p>
     </div>
-    <a [routerLink]="['/tickets', t.id]" class="btn secondary">Cancel</a>
   </div>
 
   @if (t.status === 'Closed') {
-    <div class="banner banner--closed" role="status">This ticket is closed and immutable.</div>
+    <div class="banner banner--closed" role="status">
+      <span class="banner__title">Closed</span>
+      This ticket is read-only.
+    </div>
   } @else if (!t.canEditFields) {
     <div class="banner banner--info" role="status">
-      Resolved — fields are locked, but workflow actions remain available on the detail page.
+      <span class="banner__title">Resolved</span>
+      Fields are locked. Use workflow actions on the detail page to reopen or close.
     </div>
   }
 
@@ -30,56 +45,70 @@
     <div class="banner banner--error" role="alert" aria-live="assertive">{{ errorMessage() }}</div>
   }
 
-  <form class="panel form-panel" [formGroup]="form" (ngSubmit)="submit()">
-    <div class="field">
-      <label for="title">Title</label>
-      <input id="title" type="text" formControlName="title" maxlength="200" />
-      @if (fieldError('title'); as msg) {
-        <div class="field-error">{{ msg }}</div>
-      }
-    </div>
-
-    <div class="field">
-      <label for="description">Description</label>
-      <textarea id="description" formControlName="description" maxlength="4000"></textarea>
-      @if (fieldError('description'); as msg) {
-        <div class="field-error">{{ msg }}</div>
-      }
-    </div>
-
-    <div class="form-row">
+  <form class="form-shell" [formGroup]="form" (ngSubmit)="submit()">
+    <section class="form-section">
+      <h2 class="section-title">Ticket information</h2>
       <div class="field">
-        <label for="customerName">Customer name</label>
-        <input id="customerName" type="text" formControlName="customerName" maxlength="200" />
-        @if (fieldError('customerName'); as msg) {
+        <label for="title">Title</label>
+        <input id="title" type="text" formControlName="title" maxlength="200" />
+        @if (fieldError('title'); as msg) {
           <div class="field-error">{{ msg }}</div>
         }
       </div>
 
       <div class="field">
-        <label for="customerEmail">Customer email</label>
-        <input id="customerEmail" type="email" formControlName="customerEmail" maxlength="320" />
-        @if (fieldError('customerEmail'); as msg) {
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          formControlName="description"
+          maxlength="4000"
+          rows="6"
+        ></textarea>
+        @if (fieldError('description'); as msg) {
           <div class="field-error">{{ msg }}</div>
         }
       </div>
-    </div>
+    </section>
 
-    <div class="field">
-      <label for="priority">Priority</label>
-      <select id="priority" formControlName="priority">
-        @for (p of priorityValues; track p) {
-          <option [value]="p">{{ priorityLabel(p) }}</option>
+    <section class="form-section">
+      <h2 class="section-title">Customer</h2>
+      <div class="form-row">
+        <div class="field">
+          <label for="customerName">Customer name</label>
+          <input id="customerName" type="text" formControlName="customerName" maxlength="200" />
+          @if (fieldError('customerName'); as msg) {
+            <div class="field-error">{{ msg }}</div>
+          }
+        </div>
+
+        <div class="field">
+          <label for="customerEmail">Customer email</label>
+          <input id="customerEmail" type="email" formControlName="customerEmail" maxlength="320" />
+          @if (fieldError('customerEmail'); as msg) {
+            <div class="field-error">{{ msg }}</div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <h2 class="section-title">Classification</h2>
+      <div class="field field--narrow">
+        <label for="priority">Priority</label>
+        <select id="priority" formControlName="priority">
+          @for (p of priorityValues; track p) {
+            <option [value]="p">{{ priorityLabel(p) }}</option>
+          }
+        </select>
+        @if (fieldError('priority'); as msg) {
+          <div class="field-error">{{ msg }}</div>
         }
-      </select>
-      @if (fieldError('priority'); as msg) {
-        <div class="field-error">{{ msg }}</div>
-      }
-    </div>
+      </div>
+    </section>
 
-    <div class="action-row">
+    <div class="form-footer">
       <button type="submit" [disabled]="submitting() || !t.canEditFields">Save changes</button>
-      <a [routerLink]="['/tickets', t.id]" class="btn secondary">Back to detail</a>
+      <a [routerLink]="['/tickets', t.id]" class="btn secondary">Cancel</a>
     </div>
   </form>
 }

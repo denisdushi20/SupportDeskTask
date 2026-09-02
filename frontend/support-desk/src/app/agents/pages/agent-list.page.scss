@@ -1,0 +1,70 @@
+.agent-table-wrap {
+  overflow-x: auto;
+}
+
+.agent-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.agent-table th,
+.agent-table td {
+  text-align: left;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--sd-border);
+  vertical-align: middle;
+}
+
+.agent-table th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--sd-muted);
+  background: var(--sd-surface-meta);
+  font-weight: 600;
+}
+
+.agent-table__name {
+  font-weight: 600;
+}
+
+.agent-cards {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.agent-card {
+  padding: 1rem;
+  border-bottom: 1px solid var(--sd-border);
+}
+
+.agent-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.agent-card__email {
+  margin: 0 0 0.35rem;
+  font-size: 0.875rem;
+}
+
+.agent-card__dept {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 700px) {
+  .agent-table-wrap {
+    display: none;
+  }
+
+  .agent-cards {
+    display: block;
+  }
+}

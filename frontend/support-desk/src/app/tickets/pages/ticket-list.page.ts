@@ -2,7 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import {
   BehaviorSubject,
   catchError,
@@ -15,7 +15,7 @@ import { apiErrorMessage, extractApiError } from '../../core/errors/api-error.ut
 import { ApiError } from '../../core/errors/api-error.model';
 import { AgentService } from '../../agents/services/agent.service';
 import { Agent } from '../../agents/models/agent.model';
-import { priorityLabel, statusLabel } from '../../shared/models/display';
+import { formatOverdueRelative, priorityLabel, statusLabel } from '../../shared/models/display';
 import { PRIORITY_VALUES, STATUS_VALUES, Priority, Status } from '../../shared/models/enums';
 import { TicketListItem, TicketListQuery } from '../models/ticket-list.model';
 import { TicketService } from '../services/ticket.service';
@@ -41,11 +41,13 @@ export class TicketListPage implements OnInit {
   private readonly agentsApi = inject(AgentService);
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly router = inject(Router);
 
   readonly statusValues = STATUS_VALUES;
   readonly priorityValues = PRIORITY_VALUES;
   readonly statusLabel = statusLabel;
   readonly priorityLabel = priorityLabel;
+  readonly formatOverdueRelative = formatOverdueRelative;
 
   readonly filterForm = this.fb.nonNullable.group({
     search: [''],
@@ -62,6 +64,8 @@ export class TicketListPage implements OnInit {
   readonly loading = signal(true);
   readonly error = signal<ApiError | null>(null);
   readonly agents = signal<Agent[]>([]);
+  /** Global overdue count from a one-shot lightweight query; not tied to filter changes. */
+  readonly overdueCount = signal<number | null>(null);
 
   private readonly criteria$ = new BehaviorSubject<ListCriteria>({
     search: '',
@@ -81,6 +85,10 @@ export class TicketListPage implements OnInit {
         next: (list) => this.agents.set(list),
         error: () => undefined,
       });
+
+    // Overdue metric: single lightweight request on enter (pageSize=1 → totalCount only).
+    // Intentionally NOT re-run on every filter/page change.
+    this.loadOverdueMetric();
 
     this.filterForm.controls.search.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef))
@@ -146,6 +154,18 @@ export class TicketListPage implements OnInit {
       });
   }
 
+  private loadOverdueMetric(): void {
+    this.tickets
+      .list({ page: 1, pageSize: 1, overdueOnly: true })
+      .pipe(
+        catchError(() => of(null)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((result) => {
+        this.overdueCount.set(result ? result.totalCount : null);
+      });
+  }
+
   private toQuery(c: ListCriteria): TicketListQuery {
     return {
       page: c.page,
@@ -175,6 +195,55 @@ export class TicketListPage implements OnInit {
       return;
     }
     this.criteria$.next({ ...current, page: clamped });
+  }
+
+  retry(): void {
+    const current = this.criteria$.value;
+    this.criteria$.next({ ...current });
+  }
+
+  filtersActive(): boolean {
+    const v = this.filterForm.getRawValue();
+    return (
+      v.search.trim() !== '' ||
+      v.status !== '' ||
+      v.priority !== '' ||
+      v.assignedAgentId !== '' ||
+      v.overdueOnly
+    );
+  }
+
+  clearFilters(): void {
+    this.filterForm.setValue(
+      {
+        search: '',
+        status: '',
+        priority: '',
+        assignedAgentId: '',
+        overdueOnly: false,
+      },
+      { emitEvent: false },
+    );
+    const current = this.criteria$.value;
+    this.criteria$.next({
+      ...current,
+      search: '',
+      status: '',
+      priority: '',
+      assignedAgentId: '',
+      overdueOnly: false,
+      page: 1,
+    });
+  }
+
+  applyOverdueFilter(): void {
+    if (!this.filterForm.controls.overdueOnly.value) {
+      this.filterForm.controls.overdueOnly.setValue(true);
+    }
+  }
+
+  openTicket(id: string): void {
+    void this.router.navigate(['/tickets', id]);
   }
 
   trackById(_index: number, item: TicketListItem): string {

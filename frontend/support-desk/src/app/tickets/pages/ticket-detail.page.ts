@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -8,7 +8,13 @@ import { Agent } from '../../agents/models/agent.model';
 import { AgentService } from '../../agents/services/agent.service';
 import { ApiError } from '../../core/errors/api-error.model';
 import { apiErrorMessage, extractApiError } from '../../core/errors/api-error.util';
-import { priorityLabel, statusLabel } from '../../shared/models/display';
+import {
+  departmentLabel,
+  formatOverdueRelative,
+  priorityLabel,
+  statusLabel,
+  transitionActionLabel,
+} from '../../shared/models/display';
 import { Status } from '../../shared/models/enums';
 import { isGuidFormat } from '../../shared/models/guid';
 import { TicketDetail } from '../models/ticket-detail.model';
@@ -35,6 +41,9 @@ export class TicketDetailPage implements OnInit {
 
   readonly statusLabel = statusLabel;
   readonly priorityLabel = priorityLabel;
+  readonly departmentLabel = departmentLabel;
+  readonly transitionActionLabel = transitionActionLabel;
+  readonly formatOverdueRelative = formatOverdueRelative;
 
   readonly ticket = signal<TicketDetail | null>(null);
   readonly loading = signal(true);
@@ -219,6 +228,13 @@ export class TicketDetailPage implements OnInit {
     this.showDeleteConfirm.set(false);
   }
 
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.showDeleteConfirm()) {
+      this.cancelDelete();
+    }
+  }
+
   deleteTicket(): void {
     const current = this.ticket();
     if (!current || !current.canDelete || this.actionBusy()) {
@@ -252,5 +268,4 @@ export class TicketDetailPage implements OnInit {
       control.disable({ emitEvent: false });
     }
   }
-
 }

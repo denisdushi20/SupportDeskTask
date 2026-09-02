@@ -1,15 +1,47 @@
-<header class="app-header">
-  <div class="app-header__inner">
-    <a routerLink="/tickets" class="app-brand">Support Desk</a>
-    <nav class="app-nav" aria-label="Main">
-      <a routerLink="/tickets" routerLinkActive="is-active" [routerLinkActiveOptions]="{ exact: true }"
-        >Tickets</a
-      >
-      <a routerLink="/tickets/new" routerLinkActive="is-active">New Ticket</a>
-    </nav>
-  </div>
-</header>
+<div class="app-shell" [class.app-shell--nav-open]="navOpen()">
+  <div
+    class="app-sidebar-backdrop"
+    [class.is-visible]="navOpen()"
+    (click)="closeNav()"
+    aria-hidden="true"
+  ></div>
 
-<main class="app-main">
-  <router-outlet />
-</main>
+  <aside class="app-sidebar" id="app-sidebar" [attr.aria-hidden]="false">
+    <div class="app-sidebar__brand">
+      <a routerLink="/tickets" class="app-brand" (click)="closeNav()">Support Desk</a>
+      <p class="app-sidebar__tagline">Operations</p>
+    </div>
+
+    <nav class="app-nav" aria-label="Main">
+      <a
+        routerLink="/tickets"
+        routerLinkActive="is-active"
+        [routerLinkActiveOptions]="{ paths: 'subset', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
+        (click)="closeNav()"
+      >
+        Tickets
+      </a>
+      <a routerLink="/agents" routerLinkActive="is-active" (click)="closeNav()">Agents</a>
+    </nav>
+  </aside>
+
+  <div class="app-body">
+    <header class="app-topbar">
+      <button
+        type="button"
+        class="btn btn--ghost btn--icon app-menu-toggle"
+        (click)="toggleNav()"
+        [attr.aria-expanded]="navOpen()"
+        aria-controls="app-sidebar"
+        aria-label="Toggle navigation"
+      >
+        <span class="app-menu-toggle__icon" aria-hidden="true"></span>
+      </button>
+      <span class="app-topbar__label">Support Desk</span>
+    </header>
+
+    <main class="app-main">
+      <router-outlet />
+    </main>
+  </div>
+</div>
