@@ -1,0 +1,62 @@
+:host {
+  display: block;
+  min-height: 100vh;
+}
+
+.app-header {
+  background: var(--sd-header-bg);
+  border-bottom: 1px solid var(--sd-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-header__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.85rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.app-brand {
+  font-family: var(--sd-font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--sd-text);
+  text-decoration: none;
+  letter-spacing: -0.02em;
+}
+
+.app-nav {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.app-nav a {
+  color: var(--sd-muted);
+  text-decoration: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.app-nav a:hover {
+  color: var(--sd-text);
+  background: var(--sd-surface-2);
+}
+
+.app-nav a.is-active {
+  color: var(--sd-accent);
+  background: var(--sd-accent-soft);
+}
+
+.app-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}

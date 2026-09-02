@@ -1,0 +1,135 @@
+.filters {
+  margin-bottom: 1.25rem;
+}
+
+.filters__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem 1rem;
+  align-items: end;
+}
+
+.field--checkbox {
+  display: flex;
+  align-items: center;
+  min-height: 2.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  width: auto;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  padding: 0;
+}
+
+.ticket-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.ticket-table th,
+.ticket-table td {
+  text-align: left;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--sd-border);
+  vertical-align: top;
+}
+
+.ticket-table th {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--sd-muted);
+  background: var(--sd-surface-2);
+}
+
+.ticket-table tr.is-overdue {
+  background: #fff8f8;
+}
+
+.ticket-table td a {
+  font-weight: 600;
+  margin-right: 0.4rem;
+}
+
+.ticket-cards {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0.75rem;
+}
+
+.ticket-card.is-overdue {
+  border-color: #f5c2c2;
+  background: #fff8f8;
+}
+
+.ticket-card__top {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.ticket-card__ref {
+  font-weight: 700;
+}
+
+.ticket-card__title {
+  font-size: 1.05rem;
+  margin-bottom: 0.75rem;
+}
+
+.ticket-card__meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+  margin: 0;
+}
+
+.ticket-card__meta dt {
+  font-size: 0.75rem;
+  color: var(--sd-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.ticket-card__meta dd {
+  margin: 0.1rem 0 0;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.pagination__info {
+  font-size: 0.95rem;
+}
+
+@media (max-width: 800px) {
+  .table-wrap {
+    display: none;
+  }
+
+  .ticket-cards {
+    display: grid;
+  }
+}

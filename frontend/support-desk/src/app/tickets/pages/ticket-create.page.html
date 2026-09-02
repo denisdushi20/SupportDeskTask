@@ -1,0 +1,64 @@
+<div class="page-header">
+  <div>
+    <h1>New ticket</h1>
+    <p class="muted">Create a support ticket. Reference and due date are assigned by the server.</p>
+  </div>
+  <a routerLink="/tickets" class="btn secondary">Cancel</a>
+</div>
+
+@if (error()) {
+  <div class="banner banner--error" role="alert" aria-live="assertive">{{ errorMessage() }}</div>
+}
+
+<form class="panel form-panel" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="field">
+    <label for="title">Title</label>
+    <input id="title" type="text" formControlName="title" maxlength="200" />
+    @if (fieldError('title'); as msg) {
+      <div class="field-error">{{ msg }}</div>
+    }
+  </div>
+
+  <div class="field">
+    <label for="description">Description</label>
+    <textarea id="description" formControlName="description" maxlength="4000"></textarea>
+    @if (fieldError('description'); as msg) {
+      <div class="field-error">{{ msg }}</div>
+    }
+  </div>
+
+  <div class="form-row">
+    <div class="field">
+      <label for="customerName">Customer name</label>
+      <input id="customerName" type="text" formControlName="customerName" maxlength="200" />
+      @if (fieldError('customerName'); as msg) {
+        <div class="field-error">{{ msg }}</div>
+      }
+    </div>
+
+    <div class="field">
+      <label for="customerEmail">Customer email</label>
+      <input id="customerEmail" type="email" formControlName="customerEmail" maxlength="320" />
+      @if (fieldError('customerEmail'); as msg) {
+        <div class="field-error">{{ msg }}</div>
+      }
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="priority">Priority</label>
+    <select id="priority" formControlName="priority">
+      <option value="" disabled>Select priority</option>
+      @for (p of priorityValues; track p) {
+        <option [value]="p">{{ priorityLabel(p) }}</option>
+      }
+    </select>
+    @if (fieldError('priority'); as msg) {
+      <div class="field-error">{{ msg }}</div>
+    }
+  </div>
+
+  <div class="action-row">
+    <button type="submit" [disabled]="submitting()">Create ticket</button>
+  </div>
+</form>

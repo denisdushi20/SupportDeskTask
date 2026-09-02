@@ -1,0 +1,85 @@
+@if (loading()) {
+  <div class="loading" aria-live="polite">Loading ticket…</div>
+} @else if (loadError()) {
+  <div class="panel">
+    <h1>Ticket unavailable</h1>
+    <div class="banner banner--error" role="alert">{{ errorMessage(loadError()) }}</div>
+    <a routerLink="/tickets" class="btn secondary">Back to tickets</a>
+  </div>
+} @else if (ticket(); as t) {
+  <div class="page-header">
+    <div>
+      <h1>Edit {{ t.reference }}</h1>
+      <p class="muted">
+        Status: {{ statusLabel(t.status) }}. Due date is recalculated by the server if priority
+        changes.
+      </p>
+    </div>
+    <a [routerLink]="['/tickets', t.id]" class="btn secondary">Cancel</a>
+  </div>
+
+  @if (t.status === 'Closed') {
+    <div class="banner banner--closed" role="status">This ticket is closed and immutable.</div>
+  } @else if (!t.canEditFields) {
+    <div class="banner banner--info" role="status">
+      Resolved — fields are locked, but workflow actions remain available on the detail page.
+    </div>
+  }
+
+  @if (error()) {
+    <div class="banner banner--error" role="alert" aria-live="assertive">{{ errorMessage() }}</div>
+  }
+
+  <form class="panel form-panel" [formGroup]="form" (ngSubmit)="submit()">
+    <div class="field">
+      <label for="title">Title</label>
+      <input id="title" type="text" formControlName="title" maxlength="200" />
+      @if (fieldError('title'); as msg) {
+        <div class="field-error">{{ msg }}</div>
+      }
+    </div>
+
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" formControlName="description" maxlength="4000"></textarea>
+      @if (fieldError('description'); as msg) {
+        <div class="field-error">{{ msg }}</div>
+      }
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label for="customerName">Customer name</label>
+        <input id="customerName" type="text" formControlName="customerName" maxlength="200" />
+        @if (fieldError('customerName'); as msg) {
+          <div class="field-error">{{ msg }}</div>
+        }
+      </div>
+
+      <div class="field">
+        <label for="customerEmail">Customer email</label>
+        <input id="customerEmail" type="email" formControlName="customerEmail" maxlength="320" />
+        @if (fieldError('customerEmail'); as msg) {
+          <div class="field-error">{{ msg }}</div>
+        }
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="priority">Priority</label>
+      <select id="priority" formControlName="priority">
+        @for (p of priorityValues; track p) {
+          <option [value]="p">{{ priorityLabel(p) }}</option>
+        }
+      </select>
+      @if (fieldError('priority'); as msg) {
+        <div class="field-error">{{ msg }}</div>
+      }
+    </div>
+
+    <div class="action-row">
+      <button type="submit" [disabled]="submitting() || !t.canEditFields">Save changes</button>
+      <a [routerLink]="['/tickets', t.id]" class="btn secondary">Back to detail</a>
+    </div>
+  </form>
+}

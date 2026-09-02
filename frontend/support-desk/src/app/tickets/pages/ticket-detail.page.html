@@ -1,0 +1,241 @@
+@if (loading()) {
+  <div class="loading" aria-live="polite">Loading ticket…</div>
+} @else if (error()) {
+  <div class="panel">
+    <h1>Ticket unavailable</h1>
+    <div class="banner banner--error" role="alert">{{ errorMessage() }}</div>
+    <a routerLink="/tickets" class="btn secondary">Back to tickets</a>
+  </div>
+} @else if (ticket(); as t) {
+  <div class="page-header">
+    <div>
+      <p class="ref">{{ t.reference }}</p>
+      <h1>{{ t.title }}</h1>
+      <div class="meta-row">
+        <span class="badge" [class]="'badge badge--' + t.status">{{ statusLabel(t.status) }}</span>
+        <span class="badge" [class]="'badge badge--' + t.priority">{{
+          priorityLabel(t.priority)
+        }}</span>
+        @if (t.isOverdue) {
+          <span class="overdue-flag">Overdue</span>
+        }
+      </div>
+    </div>
+    <div class="header-actions">
+      <a routerLink="/tickets" class="btn secondary">Back</a>
+      <a
+        [routerLink]="['/tickets', t.id, 'edit']"
+        class="btn secondary"
+        [attr.aria-disabled]="!t.canEditFields"
+        [class.is-disabled]="!t.canEditFields"
+        (click)="!t.canEditFields && $event.preventDefault()"
+        >Edit</a
+      >
+      <button
+        type="button"
+        class="danger"
+        [disabled]="!t.canDelete || actionBusy()"
+        (click)="confirmDelete()"
+      >
+        Delete
+      </button>
+    </div>
+  </div>
+
+  @if (t.status === 'Closed') {
+    <div class="banner banner--closed" role="status">
+      This ticket is closed and immutable.
+    </div>
+  } @else if (t.status === 'Resolved') {
+    <div class="banner banner--info" role="status">
+      Resolved — fields are locked, but workflow actions remain available.
+    </div>
+  }
+
+  @if (actionError()) {
+    <div class="banner banner--error" role="alert" aria-live="assertive">
+      {{ errorMessage(actionError()) }}
+      @if (actionError()?.code) {
+        <span class="error-code"> ({{ actionError()?.code }})</span>
+      }
+    </div>
+  }
+
+  <div class="detail-grid">
+    <section class="panel">
+      <h2>Details</h2>
+      <dl class="detail-dl">
+        <div>
+          <dt>Description</dt>
+          <dd class="pre-wrap">{{ t.description }}</dd>
+        </div>
+        <div>
+          <dt>Customer</dt>
+          <dd>{{ t.customerName }} &lt;{{ t.customerEmail }}&gt;</dd>
+        </div>
+        <div>
+          <dt>Assigned agent</dt>
+          <dd>
+            @if (t.assignedAgent) {
+              {{ t.assignedAgent.fullName }}
+              @if (!t.assignedAgent.active) {
+                <span class="muted">(inactive)</span>
+              }
+            } @else {
+              —
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Created</dt>
+          <dd>{{ t.createdDate | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>Last modified</dt>
+          <dd>{{ t.lastModifiedDate | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>Due date</dt>
+          <dd [class.overdue-text]="t.isOverdue">
+            {{ t.dueDate | date: 'medium' }}
+            @if (t.isOverdue) {
+              <span class="overdue-flag">Overdue</span>
+            }
+          </dd>
+        </div>
+        <div>
+          <dt>Resolved</dt>
+          <dd>{{ t.resolvedDate ? (t.resolvedDate | date: 'medium') : '—' }}</dd>
+        </div>
+        <div>
+          <dt>Closed</dt>
+          <dd>{{ t.closedDate ? (t.closedDate | date: 'medium') : '—' }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <div class="side-stack">
+      <section class="panel">
+        <h2>Status</h2>
+        @if (t.status === 'Closed') {
+          <p class="muted">Status changes are disabled because this ticket is closed.</p>
+        } @else if (t.allowedTransitions.length === 0) {
+          <p class="muted">No status transitions are currently available.</p>
+        } @else {
+          <div class="action-row">
+            @for (next of t.allowedTransitions; track next) {
+              <button
+                type="button"
+                [disabled]="actionBusy()"
+                (click)="changeStatus(next)"
+              >
+                Move to {{ statusLabel(next) }}
+              </button>
+            }
+          </div>
+        }
+      </section>
+
+      <section class="panel">
+        <h2>Assignment</h2>
+        @if (t.status === 'Closed') {
+          <p class="muted">Assignment is disabled because this ticket is closed.</p>
+        } @else {
+          <form [formGroup]="assignForm" (ngSubmit)="assign()">
+            <div class="field">
+              <label for="agentId">Active agent</label>
+              <select
+                id="agentId"
+                formControlName="agentId"
+              >
+                <option value="">Select an agent</option>
+                @for (agent of activeAgents(); track agent.id) {
+                  <option [value]="agent.id">{{ agent.fullName }}</option>
+                }
+              </select>
+            </div>
+            <div class="action-row">
+              <button type="submit" [disabled]="!t.canAssign || actionBusy()">
+                {{ t.assignedAgentId ? 'Reassign' : 'Assign' }}
+              </button>
+              <button
+                type="button"
+                class="secondary"
+                [disabled]="!t.canUnassign || !t.assignedAgentId || actionBusy()"
+                (click)="unassign()"
+              >
+                Unassign
+              </button>
+            </div>
+          </form>
+        }
+      </section>
+    </div>
+  </div>
+
+  <section class="panel comments">
+    <h2>Comments</h2>
+
+    @if (t.comments.length === 0) {
+      <p class="muted">No comments yet.</p>
+    } @else {
+      <ol class="comment-list">
+        @for (c of t.comments; track c.id) {
+          <li class="comment">
+            <div class="comment__meta">
+              <strong>{{ c.authorName }}</strong>
+              <time [attr.datetime]="c.createdDate">{{ c.createdDate | date: 'medium' }}</time>
+            </div>
+            <p class="pre-wrap">{{ c.body }}</p>
+          </li>
+        }
+      </ol>
+    }
+
+    @if (t.status === 'Closed' || !t.canAddComment) {
+      <p class="muted">Comments cannot be added while this ticket is closed.</p>
+    } @else {
+      <form class="comment-form" [formGroup]="commentForm" (ngSubmit)="addComment()">
+        <div class="field">
+          <label for="authorName">Author name</label>
+          <input id="authorName" type="text" formControlName="authorName" maxlength="200" />
+          @if (commentForm.controls.authorName.touched && commentForm.controls.authorName.invalid) {
+            <div class="field-error">Author name is required.</div>
+          }
+        </div>
+        <div class="field">
+          <label for="body">Comment</label>
+          <textarea id="body" formControlName="body" maxlength="4000"></textarea>
+          @if (commentForm.controls.body.touched && commentForm.controls.body.invalid) {
+            <div class="field-error">Comment body is required.</div>
+          }
+        </div>
+        <button type="submit" [disabled]="actionBusy() || commentForm.invalid">Add comment</button>
+      </form>
+    }
+  </section>
+
+  @if (showDeleteConfirm()) {
+    <div class="dialog-backdrop" role="presentation">
+      <div
+        class="dialog panel"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="delete-title"
+      >
+        <h2 id="delete-title">Delete ticket?</h2>
+        <p>
+          Permanently delete <strong>{{ t.reference }}</strong> — {{ t.title }}?
+        </p>
+        <div class="action-row">
+          <button type="button" class="danger" [disabled]="actionBusy()" (click)="deleteTicket()">
+            Delete
+          </button>
+          <button type="button" class="secondary" [disabled]="actionBusy()" (click)="cancelDelete()">
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+}
