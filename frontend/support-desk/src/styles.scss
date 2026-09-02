@@ -325,8 +325,9 @@ textarea {
 
 .banner--closed {
   background: var(--sd-surface-2);
-  border-color: var(--sd-border);
+  border-color: var(--sd-border-strong);
   color: var(--sd-text);
+  border-left: 3px solid var(--sd-badge-closed);
 }
 
 .banner__title {

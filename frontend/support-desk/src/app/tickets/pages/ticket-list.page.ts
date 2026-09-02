@@ -236,10 +236,13 @@ export class TicketListPage implements OnInit {
     });
   }
 
-  applyOverdueFilter(): void {
-    if (!this.filterForm.controls.overdueOnly.value) {
-      this.filterForm.controls.overdueOnly.setValue(true);
-    }
+  toggleOverdueFilter(): void {
+    const next = !this.filterForm.controls.overdueOnly.value;
+    this.filterForm.controls.overdueOnly.setValue(next);
+  }
+
+  isOverdueFiltered(): boolean {
+    return this.filterForm.controls.overdueOnly.value;
   }
 
   openTicket(id: string): void {

@@ -1,0 +1,118 @@
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.metric-card {
+  background: var(--sd-surface);
+  border: 1px solid var(--sd-border);
+  border-radius: var(--sd-radius);
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.metric-card--link:hover {
+  border-color: var(--sd-border-strong);
+  background: var(--sd-surface-meta);
+}
+
+.metric-card__label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--sd-muted);
+}
+
+.metric-card__value {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.metric-card--danger .metric-card__value {
+  color: var(--sd-danger);
+}
+
+.attention__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.attention__header .section-title {
+  margin: 0;
+}
+
+.attention__empty {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.attention-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.attention-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  padding: 0.85rem 0;
+  border-top: 1px solid var(--sd-border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.attention-item:first-child {
+  border-top: none;
+  padding-top: 0.25rem;
+}
+
+.attention-item:hover .attention-item__title {
+  color: var(--sd-accent);
+}
+
+.attention-item__ref {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--sd-muted);
+  margin-bottom: 0.15rem;
+}
+
+.attention-item__title {
+  font-weight: 600;
+  font-size: 0.9375rem;
+}
+
+.attention-item__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+@media (max-width: 900px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .metric-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -6,17 +6,23 @@
     aria-hidden="true"
   ></div>
 
-  <aside class="app-sidebar" id="app-sidebar" [attr.aria-hidden]="false">
+  <aside class="app-sidebar" id="app-sidebar">
     <div class="app-sidebar__brand">
-      <a routerLink="/tickets" class="app-brand" (click)="closeNav()">Support Desk</a>
+      <a routerLink="/overview" class="app-brand" (click)="closeNav()">Support Desk</a>
       <p class="app-sidebar__tagline">Operations</p>
     </div>
 
     <nav class="app-nav" aria-label="Main">
+      <a routerLink="/overview" routerLinkActive="is-active" (click)="closeNav()">Overview</a>
       <a
         routerLink="/tickets"
         routerLinkActive="is-active"
-        [routerLinkActiveOptions]="{ paths: 'subset', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
+        [routerLinkActiveOptions]="{
+          paths: 'subset',
+          queryParams: 'ignored',
+          fragment: 'ignored',
+          matrixParams: 'ignored',
+        }"
         (click)="closeNav()"
       >
         Tickets

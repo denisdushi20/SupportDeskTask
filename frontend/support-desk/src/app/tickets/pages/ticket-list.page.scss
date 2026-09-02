@@ -1,3 +1,22 @@
+.filter-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+  padding: 0.45rem 0.75rem;
+  background: var(--sd-accent-soft);
+  border: 1px solid #99f6e4;
+  border-radius: var(--sd-radius);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--sd-accent);
+}
+
+.filters--active {
+  border-color: #99f6e4;
+}
+
 .metrics {
   display: flex;
   flex-wrap: wrap;

@@ -40,6 +40,7 @@ export class TicketEditPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly priorityValues = PRIORITY_VALUES;
+  readonly priorityOptions: readonly Priority[] = ['Critical', 'High', 'Normal', 'Low'];
   readonly priorityLabel = priorityLabel;
   readonly statusLabel = statusLabel;
 
@@ -142,6 +143,14 @@ export class TicketEditPage implements OnInit {
           }, apiErr.fieldErrors);
         },
       });
+  }
+
+  selectPriority(priority: Priority): void {
+    if (!this.ticket()?.canEditFields) {
+      return;
+    }
+    this.form.controls.priority.setValue(priority);
+    this.form.controls.priority.markAsTouched();
   }
 
   errorMessage(err: ApiError | null = this.error()): string {

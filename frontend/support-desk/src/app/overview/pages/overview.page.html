@@ -1,0 +1,85 @@
+<div class="page-header">
+  <div>
+    <h1 class="page-header__title">Support overview</h1>
+    <p class="page-header__desc">A snapshot of the current support workload.</p>
+  </div>
+  <a routerLink="/tickets" class="btn secondary">View tickets</a>
+</div>
+
+@if (loading()) {
+  <div class="metric-grid" aria-busy="true" aria-live="polite">
+    @for (_ of [1, 2, 3, 4]; track $index) {
+      <div class="metric-card">
+        <div class="skeleton skeleton--text" style="width: 40%"></div>
+        <div class="skeleton skeleton--text" style="width: 30%; height: 1.5rem; margin-top: 0.5rem"></div>
+      </div>
+    }
+  </div>
+} @else if (error()) {
+  <div class="panel error-state" role="alert">
+    <h2 class="error-state__title">Unable to load overview</h2>
+    <p class="error-state__desc">{{ errorMessage() }}</p>
+    <button type="button" (click)="load()">Retry</button>
+  </div>
+} @else {
+  <div class="metric-grid" aria-label="Operational summary">
+    <div class="metric-card">
+      <span class="metric-card__label">Total</span>
+      <span class="metric-card__value">{{ totalCount() }}</span>
+    </div>
+    <a routerLink="/tickets" class="metric-card metric-card--link metric-card--danger">
+      <span class="metric-card__label">Overdue</span>
+      <span class="metric-card__value">{{ overdueCount() }}</span>
+    </a>
+    <div class="metric-card">
+      <span class="metric-card__label">Critical</span>
+      <span class="metric-card__value">{{ criticalCount() }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-card__label">Open</span>
+      <span class="metric-card__value">{{ openCount() }}</span>
+    </div>
+  </div>
+
+  <section class="attention panel">
+    <div class="attention__header">
+      <h2 class="section-title">Needs attention</h2>
+      <a routerLink="/tickets" class="btn-link">All tickets</a>
+    </div>
+
+    @if (needsAttention().length === 0) {
+      <p class="muted attention__empty">No overdue tickets right now.</p>
+    } @else {
+      <ul class="attention-list">
+        @for (ticket of needsAttention(); track ticket.id) {
+          <li>
+            <a [routerLink]="['/tickets', ticket.id]" class="attention-item">
+              <div class="attention-item__main">
+                <span class="attention-item__ref">{{ ticket.reference }}</span>
+                <span class="attention-item__title">{{ ticket.title }}</span>
+              </div>
+              <div class="attention-item__meta">
+                <span class="badge" [class]="'badge badge--' + ticket.priority">{{
+                  priorityLabel(ticket.priority)
+                }}</span>
+                <span class="badge" [class]="'badge badge--' + ticket.status">{{
+                  statusLabel(ticket.status)
+                }}</span>
+                @if (ticket.isOverdue) {
+                  <span class="overdue-flag">
+                    Overdue
+                    @if (formatOverdueRelative(ticket.dueDate); as rel) {
+                      <span class="overdue-flag__detail">{{ rel }}</span>
+                    }
+                  </span>
+                } @else {
+                  <span class="muted">Due {{ ticket.dueDate | date: 'mediumDate' }}</span>
+                }
+              </div>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+}

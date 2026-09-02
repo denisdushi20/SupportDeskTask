@@ -10,24 +10,45 @@
 
 <div class="metrics" aria-label="Ticket metrics">
   <div class="metric">
-    <span class="metric__label">Total</span>
+    <span class="metric__label">{{ filtersActive() ? 'Matching' : 'Total' }}</span>
     <span class="metric__value">{{ loading() && !error() ? '—' : totalCount() }}</span>
   </div>
   <button
     type="button"
     class="metric metric--action"
-    [class.is-active]="filterForm.controls.overdueOnly.value"
-    (click)="applyOverdueFilter()"
-    [attr.aria-pressed]="filterForm.controls.overdueOnly.value"
+    [class.is-active]="isOverdueFiltered()"
+    (click)="toggleOverdueFilter()"
+    [attr.aria-pressed]="isOverdueFiltered()"
+    [attr.aria-label]="
+      isOverdueFiltered() ? 'Clear overdue filter' : 'Show overdue tickets only'
+    "
   >
-    <span class="metric__label">Overdue</span>
+    <span class="metric__label">
+      @if (isOverdueFiltered()) {
+        ✓ Overdue
+      } @else {
+        Overdue
+      }
+    </span>
     <span class="metric__value metric__value--danger">
       {{ overdueCount() === null ? '—' : overdueCount() }}
     </span>
   </button>
 </div>
 
-<form class="filters" [formGroup]="filterForm" (ngSubmit)="$event.preventDefault()">
+@if (filtersActive()) {
+  <div class="filter-status" role="status">
+    <span>Filters active</span>
+    <button type="button" class="btn-link" (click)="clearFilters()">Clear filters</button>
+  </div>
+}
+
+<form
+  class="filters"
+  [class.filters--active]="filtersActive()"
+  [formGroup]="filterForm"
+  (ngSubmit)="$event.preventDefault()"
+>
   <div class="filters__grid">
     <div class="field filters__search">
       <label for="search">Search</label>

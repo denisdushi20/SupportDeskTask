@@ -36,6 +36,8 @@ export class TicketCreatePage {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly priorityValues = PRIORITY_VALUES;
+  /** Display order for segmented control (urgency descending). */
+  readonly priorityOptions: readonly Priority[] = ['Critical', 'High', 'Normal', 'Low'];
   readonly priorityLabel = priorityLabel;
   readonly submitting = signal(false);
   readonly error = signal<ApiError | null>(null);
@@ -60,6 +62,7 @@ export class TicketCreatePage {
     const raw = this.form.getRawValue();
     if (!raw.priority) {
       this.form.controls.priority.setErrors({ required: true });
+      this.form.controls.priority.markAsTouched();
       return;
     }
 
@@ -92,6 +95,11 @@ export class TicketCreatePage {
           }, apiErr.fieldErrors);
         },
       });
+  }
+
+  selectPriority(priority: Priority): void {
+    this.form.controls.priority.setValue(priority);
+    this.form.controls.priority.markAsTouched();
   }
 
   errorMessage(): string {

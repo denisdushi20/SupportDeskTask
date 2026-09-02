@@ -1,9 +1,7 @@
 <div class="page-header">
   <div>
-    <h1 class="page-header__title">New ticket</h1>
-    <p class="page-header__desc">
-      Create a support ticket. Reference and due date are assigned by the server.
-    </p>
+    <h1 class="page-header__title">Create ticket</h1>
+    <p class="page-header__desc">Create a new support request. Reference and due date are assigned by the server.</p>
   </div>
 </div>
 
@@ -12,30 +10,43 @@
 }
 
 <form class="form-shell" [formGroup]="form" (ngSubmit)="submit()">
-  <section class="form-section">
+  <section class="form-section form-section--primary">
     <h2 class="section-title">Ticket information</h2>
     <div class="field">
-      <label for="title">Title</label>
-      <input id="title" type="text" formControlName="title" maxlength="200" />
+      <label for="title">Title <span class="req" aria-hidden="true">*</span></label>
+      <input
+        id="title"
+        type="text"
+        formControlName="title"
+        maxlength="200"
+        placeholder="Short summary of the issue"
+        autocomplete="off"
+      />
       @if (fieldError('title'); as msg) {
         <div class="field-error">{{ msg }}</div>
       }
     </div>
 
     <div class="field">
-      <label for="description">Description</label>
-      <textarea id="description" formControlName="description" maxlength="4000" rows="6"></textarea>
+      <label for="description">Description <span class="req" aria-hidden="true">*</span></label>
+      <textarea
+        id="description"
+        formControlName="description"
+        maxlength="4000"
+        rows="7"
+        placeholder="Describe the customer issue and any relevant context"
+      ></textarea>
       @if (fieldError('description'); as msg) {
         <div class="field-error">{{ msg }}</div>
       }
     </div>
   </section>
 
-  <section class="form-section">
-    <h2 class="section-title">Customer</h2>
-    <div class="form-row">
+  <div class="form-columns">
+    <section class="form-section">
+      <h2 class="section-title">Customer</h2>
       <div class="field">
-        <label for="customerName">Customer name</label>
+        <label for="customerName">Customer name <span class="req" aria-hidden="true">*</span></label>
         <input id="customerName" type="text" formControlName="customerName" maxlength="200" />
         @if (fieldError('customerName'); as msg) {
           <div class="field-error">{{ msg }}</div>
@@ -43,34 +54,58 @@
       </div>
 
       <div class="field">
-        <label for="customerEmail">Customer email</label>
-        <input id="customerEmail" type="email" formControlName="customerEmail" maxlength="320" />
+        <label for="customerEmail">Customer email <span class="req" aria-hidden="true">*</span></label>
+        <input
+          id="customerEmail"
+          type="email"
+          formControlName="customerEmail"
+          maxlength="320"
+          placeholder="customer@example.com"
+        />
         @if (fieldError('customerEmail'); as msg) {
           <div class="field-error">{{ msg }}</div>
         }
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section class="form-section">
-    <h2 class="section-title">Classification</h2>
-    <div class="field field--narrow">
-      <label for="priority">Priority</label>
-      <select id="priority" formControlName="priority">
-        <option value="" disabled>Select priority</option>
-        @for (p of priorityValues; track p) {
-          <option [value]="p">{{ priorityLabel(p) }}</option>
+    <section class="form-section">
+      <h2 class="section-title">Classification</h2>
+      <div class="field">
+        <span class="label-text" id="priority-label"
+          >Priority <span class="req" aria-hidden="true">*</span></span
+        >
+        <div
+          class="priority-seg"
+          role="radiogroup"
+          aria-labelledby="priority-label"
+          [attr.aria-required]="true"
+        >
+          @for (p of priorityOptions; track p) {
+            <button
+              type="button"
+              class="priority-seg__option"
+              [class]="'priority-seg__option priority-seg__option--' + p"
+              [class.is-selected]="form.controls.priority.value === p"
+              role="radio"
+              [attr.aria-checked]="form.controls.priority.value === p"
+              (click)="selectPriority(p)"
+            >
+              {{ priorityLabel(p) }}
+            </button>
+          }
+        </div>
+        <p class="field-hint">Due date is calculated from priority when the ticket is created.</p>
+        @if (fieldError('priority'); as msg) {
+          <div class="field-error">{{ msg }}</div>
         }
-      </select>
-      <p class="field-hint">Due date is calculated from priority when the ticket is created.</p>
-      @if (fieldError('priority'); as msg) {
-        <div class="field-error">{{ msg }}</div>
-      }
-    </div>
-  </section>
+      </div>
+    </section>
+  </div>
 
   <div class="form-footer">
-    <button type="submit" [disabled]="submitting()">Create ticket</button>
     <a routerLink="/tickets" class="btn secondary">Cancel</a>
+    <button type="submit" class="btn form-footer__primary" [disabled]="submitting()">
+      {{ submitting() ? 'Creating…' : 'Create ticket' }}
+    </button>
   </div>
 </form>
