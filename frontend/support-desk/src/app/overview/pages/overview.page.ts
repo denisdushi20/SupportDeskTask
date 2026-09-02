@@ -8,7 +8,11 @@ import { apiErrorMessage, extractApiError } from '../../core/errors/api-error.ut
 import { formatOverdueRelative, priorityLabel, statusLabel } from '../../shared/models/display';
 import { TicketListItem } from '../../tickets/models/ticket-list.model';
 import { TicketService } from '../../tickets/services/ticket.service';
-import { computeOpenCount } from '../utils/overview-metrics';
+import {
+  StatusShare,
+  buildStatusShares,
+  computeOpenCount,
+} from '../utils/overview-metrics';
 
 @Component({
   selector: 'app-overview-page',
@@ -33,6 +37,7 @@ export class OverviewPage implements OnInit {
   readonly criticalCount = signal<number | null>(null);
   readonly openCount = signal<number | null>(null);
   readonly needsAttention = signal<TicketListItem[]>([]);
+  readonly statusShares = signal<StatusShare[]>([]);
 
   ngOnInit(): void {
     this.load();
@@ -42,12 +47,15 @@ export class OverviewPage implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
-    // One-shot forkJoin. All counts use pageSize=1 totalCount. Total has no filters.
+    // One-shot forkJoin. Counts use pageSize=1 totalCount. Total has no filters.
     forkJoin({
       total: this.tickets.list({ page: 1, pageSize: 1 }),
       overdue: this.tickets.list({ page: 1, pageSize: 1, overdueOnly: true }),
       critical: this.tickets.list({ page: 1, pageSize: 1, priority: 'Critical' }),
       closed: this.tickets.list({ page: 1, pageSize: 1, status: 'Closed' }),
+      statusNew: this.tickets.list({ page: 1, pageSize: 1, status: 'New' }),
+      statusInProgress: this.tickets.list({ page: 1, pageSize: 1, status: 'InProgress' }),
+      statusResolved: this.tickets.list({ page: 1, pageSize: 1, status: 'Resolved' }),
       attention: this.tickets.list({ page: 1, pageSize: 5, overdueOnly: true }),
     })
       .pipe(
@@ -65,6 +73,7 @@ export class OverviewPage implements OnInit {
           this.criticalCount.set(null);
           this.openCount.set(null);
           this.needsAttention.set([]);
+          this.statusShares.set([]);
           return;
         }
         this.totalCount.set(result.total.totalCount);
@@ -72,6 +81,14 @@ export class OverviewPage implements OnInit {
         this.criticalCount.set(result.critical.totalCount);
         this.openCount.set(computeOpenCount(result.total.totalCount, result.closed.totalCount));
         this.needsAttention.set(result.attention.items);
+        this.statusShares.set(
+          buildStatusShares({
+            New: result.statusNew.totalCount,
+            InProgress: result.statusInProgress.totalCount,
+            Resolved: result.statusResolved.totalCount,
+            Closed: result.closed.totalCount,
+          }),
+        );
       });
   }
 

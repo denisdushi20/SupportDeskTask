@@ -41,6 +41,10 @@
     <span>Filters active</span>
     <button type="button" class="btn-link" (click)="clearFilters()">Clear filters</button>
   </div>
+} @else if (openContext()) {
+  <div class="filter-status filter-status--info" role="status">
+    <span>Showing all tickets. The Open metric excludes Closed (Total − Closed).</span>
+  </div>
 }
 
 <form

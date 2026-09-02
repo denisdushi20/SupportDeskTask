@@ -15,6 +15,12 @@
       </div>
     }
   </div>
+  <div class="panel dist-panel">
+    <div class="skeleton skeleton--text" style="width: 35%; margin-bottom: 1rem"></div>
+    @for (_ of [1, 2, 3, 4]; track $index) {
+      <div class="skeleton skeleton--text" style="width: 100%; height: 0.65rem; margin-bottom: 0.85rem"></div>
+    }
+  </div>
 } @else if (error()) {
   <div class="panel error-state" role="alert">
     <h2 class="error-state__title">Unable to load overview</h2>
@@ -23,28 +29,93 @@
   </div>
 } @else {
   <div class="metric-grid" aria-label="Operational summary">
-    <div class="metric-card">
+    <a
+      routerLink="/tickets"
+      class="metric-card metric-card--link"
+      aria-label="View all tickets"
+    >
       <span class="metric-card__label">Total</span>
       <span class="metric-card__value">{{ totalCount() }}</span>
-    </div>
-    <a routerLink="/tickets" class="metric-card metric-card--link metric-card--danger">
+      <span class="metric-card__hint">View all</span>
+    </a>
+    <a
+      routerLink="/tickets"
+      [queryParams]="{ overdueOnly: 'true' }"
+      class="metric-card metric-card--link metric-card--danger"
+      aria-label="View overdue tickets"
+    >
       <span class="metric-card__label">Overdue</span>
       <span class="metric-card__value">{{ overdueCount() }}</span>
+      <span class="metric-card__hint">Filter overdue</span>
     </a>
-    <div class="metric-card">
+    <a
+      routerLink="/tickets"
+      [queryParams]="{ priority: 'Critical' }"
+      class="metric-card metric-card--link metric-card--critical"
+      aria-label="View critical tickets"
+    >
       <span class="metric-card__label">Critical</span>
       <span class="metric-card__value">{{ criticalCount() }}</span>
-    </div>
-    <div class="metric-card">
+      <span class="metric-card__hint">Filter critical</span>
+    </a>
+    <a
+      routerLink="/tickets"
+      [queryParams]="{ open: '1' }"
+      class="metric-card metric-card--link metric-card--open"
+      aria-label="View open tickets"
+    >
       <span class="metric-card__label">Open</span>
       <span class="metric-card__value">{{ openCount() }}</span>
-    </div>
+      <span class="metric-card__hint">View tickets</span>
+    </a>
   </div>
+
+  <section class="panel dist-panel" aria-label="Workload by status">
+    <div class="dist-panel__header">
+      <div>
+        <h2 class="section-title">Workload by status</h2>
+        <p class="dist-panel__sub muted">Live counts from the ticket API · click a status to open that queue</p>
+      </div>
+    </div>
+
+    <ul class="status-dist">
+      @for (row of statusShares(); track row.status) {
+        <li>
+          <a
+            class="status-dist__row"
+            routerLink="/tickets"
+            [queryParams]="{ status: row.status }"
+            [attr.aria-label]="'View ' + statusLabel(row.status) + ' tickets, ' + row.count"
+          >
+            <div class="status-dist__meta">
+              <span class="status-dist__name">
+                <span class="status-dist__dot" [attr.data-status]="row.status" aria-hidden="true"></span>
+                {{ statusLabel(row.status) }}
+              </span>
+              <span class="status-dist__stats">
+                <strong>{{ row.count }}</strong>
+                <span class="muted">{{ row.percent }}%</span>
+              </span>
+            </div>
+            <div class="status-dist__track" aria-hidden="true">
+              <div
+                class="status-dist__fill"
+                [attr.data-status]="row.status"
+                [style.width.%]="row.percent"
+              ></div>
+            </div>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
 
   <section class="attention panel">
     <div class="attention__header">
       <h2 class="section-title">Needs attention</h2>
-      <a routerLink="/tickets" class="btn-link">All tickets</a>
+      <a routerLink="/tickets" [queryParams]="{ overdueOnly: 'true' }" class="btn-link"
+        >Overdue tickets</a
+      >
     </div>
 
     @if (needsAttention().length === 0) {

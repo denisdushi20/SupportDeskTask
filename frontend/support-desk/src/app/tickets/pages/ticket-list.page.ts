@@ -2,13 +2,14 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import {
   BehaviorSubject,
   catchError,
   debounceTime,
   distinctUntilChanged,
   of,
+  skip,
   switchMap,
 } from 'rxjs';
 import { apiErrorMessage, extractApiError } from '../../core/errors/api-error.util';
@@ -30,6 +31,14 @@ interface ListCriteria {
   pageSize: number;
 }
 
+function isStatus(value: string | null): value is Status {
+  return !!value && (STATUS_VALUES as readonly string[]).includes(value);
+}
+
+function isPriority(value: string | null): value is Priority {
+  return !!value && (PRIORITY_VALUES as readonly string[]).includes(value);
+}
+
 @Component({
   selector: 'app-ticket-list-page',
   imports: [ReactiveFormsModule, RouterLink, DatePipe],
@@ -42,6 +51,7 @@ export class TicketListPage implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly statusValues = STATUS_VALUES;
   readonly priorityValues = PRIORITY_VALUES;
@@ -66,6 +76,8 @@ export class TicketListPage implements OnInit {
   readonly agents = signal<Agent[]>([]);
   /** Global overdue count from a one-shot lightweight query; not tied to filter changes. */
   readonly overdueCount = signal<number | null>(null);
+  /** Set when arriving from Overview Open card (metric excludes Closed; list API cannot). */
+  readonly openContext = signal(false);
 
   private readonly criteria$ = new BehaviorSubject<ListCriteria>({
     search: '',
@@ -78,6 +90,9 @@ export class TicketListPage implements OnInit {
   });
 
   ngOnInit(): void {
+    // Apply deep-link / Overview card filters before the first list request.
+    this.applyQueryParams(this.route.snapshot.queryParamMap);
+
     this.agentsApi
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -87,7 +102,6 @@ export class TicketListPage implements OnInit {
       });
 
     // Overdue metric: single lightweight request on enter (pageSize=1 → totalCount only).
-    // Intentionally NOT re-run on every filter/page change.
     this.loadOverdueMetric();
 
     this.filterForm.controls.search.valueChanges
@@ -100,6 +114,7 @@ export class TicketListPage implements OnInit {
     this.filterForm.controls.status.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((status) => {
+        this.openContext.set(false);
         const current = this.criteria$.value;
         this.criteria$.next({ ...current, status, page: 1 });
       });
@@ -107,6 +122,7 @@ export class TicketListPage implements OnInit {
     this.filterForm.controls.priority.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((priority) => {
+        this.openContext.set(false);
         const current = this.criteria$.value;
         this.criteria$.next({ ...current, priority, page: 1 });
       });
@@ -121,6 +137,7 @@ export class TicketListPage implements OnInit {
     this.filterForm.controls.overdueOnly.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((overdueOnly) => {
+        this.openContext.set(false);
         const current = this.criteria$.value;
         this.criteria$.next({ ...current, overdueOnly, page: 1 });
       });
@@ -152,6 +169,65 @@ export class TicketListPage implements OnInit {
         this.pageSize.set(result.pageSize);
         this.totalCount.set(result.totalCount);
       });
+
+    // Subsequent Overview card clicks while Tickets is already open.
+    this.route.queryParamMap
+      .pipe(skip(1), takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        this.applyQueryParams(params);
+      });
+  }
+
+  private applyQueryParams(params: {
+    get(name: string): string | null;
+  }): void {
+    const statusParam = params.get('status');
+    const priorityParam = params.get('priority');
+    const overdueOnly = params.get('overdueOnly') === 'true';
+    const open = params.get('open') === '1';
+
+    const status: '' | Status = isStatus(statusParam) ? statusParam : '';
+    const priority: '' | Priority = isPriority(priorityParam) ? priorityParam : '';
+
+    // open=1: clear filters and fetch all tickets. Open metric = Total−Closed (no exclude-Closed API).
+    if (open && !status && !priority && !overdueOnly) {
+      this.openContext.set(true);
+      this.filterForm.setValue(
+        { search: '', status: '', priority: '', assignedAgentId: '', overdueOnly: false },
+        { emitEvent: false },
+      );
+      this.criteria$.next({
+        search: '',
+        status: '',
+        priority: '',
+        assignedAgentId: '',
+        overdueOnly: false,
+        page: 1,
+        pageSize: 20,
+      });
+      return;
+    }
+
+    this.openContext.set(false);
+    this.filterForm.setValue(
+      {
+        search: '',
+        status,
+        priority,
+        assignedAgentId: '',
+        overdueOnly,
+      },
+      { emitEvent: false },
+    );
+    this.criteria$.next({
+      search: '',
+      status,
+      priority,
+      assignedAgentId: '',
+      overdueOnly,
+      page: 1,
+      pageSize: 20,
+    });
   }
 
   private loadOverdueMetric(): void {
@@ -214,6 +290,7 @@ export class TicketListPage implements OnInit {
   }
 
   clearFilters(): void {
+    this.openContext.set(false);
     this.filterForm.setValue(
       {
         search: '',
@@ -234,9 +311,11 @@ export class TicketListPage implements OnInit {
       overdueOnly: false,
       page: 1,
     });
+    void this.router.navigate(['/tickets']);
   }
 
   toggleOverdueFilter(): void {
+    this.openContext.set(false);
     const next = !this.filterForm.controls.overdueOnly.value;
     this.filterForm.controls.overdueOnly.setValue(next);
   }

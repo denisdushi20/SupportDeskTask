@@ -13,6 +13,13 @@
   color: var(--sd-accent);
 }
 
+.filter-status--info {
+  background: var(--sd-info-soft);
+  border-color: #bfdbfe;
+  color: var(--sd-info);
+  font-weight: 500;
+}
+
 .filters--active {
   border-color: #99f6e4;
 }

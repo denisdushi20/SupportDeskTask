@@ -576,7 +576,7 @@ These are **documented interpretations** where the assignment text was incomplet
 
 **Approximately 5–7 hours** across one development session (evening into early morning), covering domain/persistence/API implementation, Angular UI, automated tests, browser verification, GUID hardening, and this documentation.
 
-This is an **estimate** based on Git commit timestamps (roughly ~2 hours of commit span) plus uncommitted verification/hardening/documentation work. It is not a stopwatch measurement.
+
 
 ---
 
