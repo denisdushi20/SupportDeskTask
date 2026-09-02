@@ -1,6 +1,12 @@
 @SupportDesk.Api_HostAddress = http://localhost:5264
 
-GET {{SupportDesk.Api_HostAddress}}/weatherforecast/
+### List tickets
+GET {{SupportDesk.Api_HostAddress}}/api/tickets?page=1&pageSize=20
+Accept: application/json
+
+###
+### Get agents
+GET {{SupportDesk.Api_HostAddress}}/api/agents
 Accept: application/json
 
 ###
