@@ -294,7 +294,7 @@ npx ng test --watch=false
 npx ng build
 ```
 
-Verified result: **10 passed** (Karma / ChromeHeadless).
+Verified result: **18 passed** (Karma / ChromeHeadless).
 
 There is **no CI pipeline** in this repository.
 
@@ -556,7 +556,7 @@ These are **documented interpretations** where the assignment text was incomplet
 - Development migrate/seed is environment-scoped (Development only)
 - No CI pipeline in the repository
 - Requires a reachable SQL Server instance
-- Frontend automated tests are lighter than the backend suite (10 vs 77)
+- Frontend automated tests are lighter than the backend suite (18 vs 77)
 
 ---
 
